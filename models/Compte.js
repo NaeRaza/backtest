@@ -29,7 +29,8 @@ Compte.init({
 console.log(Compte === sequelize.models.Compte)
 
 Compte.belongsTo(Client, {
-    foreignKey : 'idClient'
+    foreignKey : 'idClient',
+    onDelete: 'CASCADE'
 })
 
 module.exports = Compte
