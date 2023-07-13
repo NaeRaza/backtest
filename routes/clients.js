@@ -52,7 +52,7 @@ router.put("/:id", async (req, res) => {
 
       // Enregistrez les modifications dans la base de données
       await updatedUser.save();
-      res.status(200).json("L'utilisateur a été mis à jour avec succès");
+      res.status(200).json({"message": "L'utilisateur a été mis à jour avec succès"});
     } catch (err) {
       res.status(500).send(err);
     }
@@ -61,29 +61,46 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-//Supprimer un Client
-router.delete('/:id', async (req, res) => {
-    try {
-        const client = await Client.findByPk(req.params.id);
-        if (!client) {
-            return res.status(404).json("Client non trouvé");
-        }
-
-        // Supprimer les comptes associés au client
-        await Compte.destroy({
-            where: {
-                idClient: req.params.id
-            }
-        });
-
-        // Supprimer le client lui-même
-        await client.destroy();
-
-        res.status(200).json("Client supprimé avec ses comptes associés");
-    } catch (err) {
-        res.status(500).send(err);
+// Supprimer un client
+router.delete('/client/:id', async (req, res) => {
+  try {
+    const client = await Client.findByPk(req.params.id);
+    if (!client) {
+      return res.status(404).json("Client non trouvé");
     }
+
+    // Supprimer les comptes associés au client
+    await Compte.destroy({
+      where: {
+        idClient: req.params.id
+      }
+    });
+
+    // Supprimer le client lui-même
+    await client.destroy();
+
+    res.status(200).json("Client supprimé avec ses comptes associés");
+  } catch (err) {
+    res.status(500).send(err);
+  }
 });
 
+// Supprimer un compte
+router.delete('/compte/:id', async (req, res) => {
+  try {
+    const compte = await Compte.findByPk(req.params.id);
+    if (!compte) {
+      return res.status(404).json("Compte non trouvé");
+    }
+
+    // Supprimer le compte lui-même
+    await compte.destroy();
+
+    res.status(200).json("Compte supprimé avec succès");
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Une erreur s'est produite lors de la suppression du compte");
+  }
+});
 
 module.exports = router;
