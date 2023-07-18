@@ -5,10 +5,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-// Génération de la clé secrète
 const secretKey = crypto.randomBytes(64).toString("hex");
 
-// Création d'un client et inscription
 router.post("/register", async (req, res) => {
   try {
     const newUser = await User.create({
@@ -26,6 +24,7 @@ router.post("/register", async (req, res) => {
       motdepasse: hashedPass,
       idClient: savedUser.id,
     });
+
     const savedAccount = await newAccount.save();
 
     res.status(201).json({
@@ -33,51 +32,51 @@ router.post("/register", async (req, res) => {
       nom: savedUser.nom,
       matricule: savedUser.matricule,
       email: savedAccount.email,
-      motdepasse: savedAccount.motdepasse,
     });
   } catch (err) {
-    res.json(err);
+    res.status(500).json({ message: "Une erreur s'est produite" });
   }
 });
 
-// Se connecter
 router.post("/login", async (req, res) => {
   try {
     const compte = await Compte.findOne({
       where: { email: req.body.email },
     });
+
     if (!compte) {
-      return res.status(400).json("Coordonnée inexistante");
+      return res.status(400).json({ message: "Coordonnées inexistantes" });
     }
 
     const validated = await bcrypt.compare(
       req.body.motdepasse,
       compte.motdepasse
     );
+
     if (!validated) {
-      return res.status(400).json("Coordonnée inexistante");
+      return res.status(400).json({ message: "Coordonnées invalides" });
     }
 
-    // Générez le token JWT avec les informations utilisateur
-    const accessToken = jwt.sign(
-      { id: compte.id, email: compte.email },
-      secretKey,
-      {
-        expiresIn: "1h", // Définissez une expiration appropriée pour votre token
-      }
-    );
+    const token = jwt.sign({ id: compte.id, email: compte.email }, secretKey, {
+      expiresIn: "1h",
+    });
 
-    res.status(200).json({ email: compte.email, accessToken });
+    // Définir le cookie d'authentification
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Assurez-vous d'être en HTTPS en production
+      maxAge: 3600000, // Durée de validité du cookie : 1 heure
+    });
+
+    res.status(200).json({ email: compte.email });
   } catch (err) {
     console.error(err);
-    res.status(500).json("Une erreur s'est produite");
+    res.status(500).json({ message: "Une erreur s'est produite" });
   }
 });
 
-// Middleware d'authentification avec JWT
 function authenticateToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const token = req.cookies.accessToken;
 
   if (!token) {
     return res.status(401).json({ message: "Token manquant" });
@@ -93,7 +92,6 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Exemple d'utilisation du middleware d'authentification pour une route protégée
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -104,7 +102,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
     console.error(err);
     res
       .status(500)
-      .json("Une erreur s'est produite lors de la récupération du profil");
+      .json({ message: "Une erreur s'est produite lors de la récupération du profil" });
   }
 });
 
