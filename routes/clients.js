@@ -6,7 +6,7 @@ const bcrypt = require("bcrypt");
 //Voir la liste de toutes les utilisateurs
 router.get("/list", (req, res) => {
   Compte.findAll({
-    include: { model: Client, attributes: ["matricule", "nom"] },
+    include: { model: Client, attributes: ["matricule", "nom", "genre"] },
   })
     .then((users) => {
       res.status(200).json(
@@ -15,6 +15,7 @@ router.get("/list", (req, res) => {
             id: user.idClient,
             matricule: user.Client.matricule,
             nom: user.Client.nom,
+            genre: user.Client.genre,
             email: user.email,
             motdepasse: user.motdepasse,
           };

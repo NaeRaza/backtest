@@ -12,6 +12,7 @@ router.post("/register", async (req, res) => {
     const newUser = await User.create({
       matricule: req.body.matricule,
       nom: req.body.nom,
+      genre: req.body.genre
     });
 
     const savedUser = await newUser.save();
@@ -31,6 +32,7 @@ router.post("/register", async (req, res) => {
       idClient: savedUser.id,
       nom: savedUser.nom,
       matricule: savedUser.matricule,
+      genre: savedUser.genre,
       email: savedAccount.email,
     });
   } catch (err) {

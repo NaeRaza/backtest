@@ -11,6 +11,10 @@ Client.init({
     nom: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    genre:{
+        type: DataTypes.STRING,
+        allowNull: false
     }
 }, {
     sequelize,
